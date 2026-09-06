@@ -27,6 +27,10 @@ export const buildTransport = (config: TEmailTransportConfig): Transporter => {
         host: config.host,
         port: config.port,
         secure: config.secure,
+        // Some hosts (e.g. Render) have no working IPv6 egress, which makes
+        // connections to hosts that resolve to an AAAA record (e.g. Gmail)
+        // fail with ENETUNREACH. Force IPv4 to avoid that.
+        family: 4,
         auth: {
           user: config.apiKeyUser ?? 'apikey',
           pass: config.apiKey,
@@ -39,6 +43,8 @@ export const buildTransport = (config: TEmailTransportConfig): Transporter => {
         port: config.port,
         secure: config.secure,
         ignoreTLS: config.ignoreTLS,
+        // See comment in the SMTP_API case above.
+        family: 4,
         auth: config.username
           ? {
               user: config.username,
