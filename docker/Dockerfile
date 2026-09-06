@@ -59,6 +59,12 @@ ENV NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY="$NEXT_PRIVATE_ENCRYPTION_SECONDARY_KE
 ARG NEXT_PUBLIC_BASE_PATH=""
 ENV NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH"
 
+# Public URL of this instance. Baked into the client bundle at build time
+# (the auth client's baseUrl is not read at runtime), so it must be set here
+# to whatever domain this image will actually be deployed under.
+ARG NEXT_PUBLIC_WEBAPP_URL="http://localhost:3000"
+ENV NEXT_PUBLIC_WEBAPP_URL="$NEXT_PUBLIC_WEBAPP_URL"
+
 # Telemetry credentials (optional, baked into image at build time)
 ARG NEXT_PRIVATE_TELEMETRY_KEY=""
 ENV NEXT_PRIVATE_TELEMETRY_KEY="$NEXT_PRIVATE_TELEMETRY_KEY"
