@@ -1,0 +1,19 @@
+diff --git a/node_modules/nodemailer/lib/shared/index.js b/node_modules/nodemailer/lib/shared/index.js
+index 1111111..2222222 100644
+--- a/node_modules/nodemailer/lib/shared/index.js
++++ b/node_modules/nodemailer/lib/shared/index.js
+@@ -31,6 +31,14 @@
+ module.exports.networkInterfaces = networkInterfaces;
+ 
+ const isFamilySupported = (family, allowInternal) => {
++    // Some hosts (e.g. Render) report a local IPv6 interface that has no
++    // actual outbound route, which makes nodemailer prefer IPv6 and then
++    // fail with ENETUNREACH instead of falling back to IPv4. Since none of
++    // our self-hosted deployments have working IPv6 egress, force IPv4.
++    if (family === 6 || family === 'IPv6') {
++        return false;
++    }
++
+     const ifaces = module.exports.networkInterfaces;
+     if (!ifaces) {
+         // hope for the best
