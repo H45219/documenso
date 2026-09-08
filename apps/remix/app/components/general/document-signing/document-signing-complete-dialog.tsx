@@ -4,6 +4,7 @@ import { type TRecipientAccessAuth, ZDocumentAccessAuthSchema } from '@documenso
 import { fieldsContainUnsignedRequiredField } from '@documenso/lib/utils/advanced-fields-helpers';
 import { zEmail } from '@documenso/lib/utils/zod';
 import { Button } from '@documenso/ui/primitives/button';
+import { Checkbox } from '@documenso/ui/primitives/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -94,6 +95,12 @@ export const DocumentSigningCompleteDialog = ({
   const { toast } = useToast();
 
   const [showDialog, setShowDialog] = useState(false);
+  const [hasAcceptedContractNotice, setHasAcceptedContractNotice] = useState(false);
+
+  // Signing and approving are the acts that actually bind the recipient to the document —
+  // viewing/CC'ing is not, so only those roles must actively confirm the contract notice.
+  const requiresContractNoticeConsent =
+    recipient.role === RecipientRole.SIGNER || recipient.role === RecipientRole.APPROVER;
 
   const [showTwoFactorForm, setShowTwoFactorForm] = useState(false);
   const [twoFactorValidationError, setTwoFactorValidationError] = useState<string | null>(null);
@@ -135,6 +142,7 @@ export const DocumentSigningCompleteDialog = ({
         name: defaultNextSigner?.name ?? '',
         email: defaultNextSigner?.email ?? '',
       });
+      setHasAcceptedContractNotice(false);
     }
 
     setShowDialog(open);
@@ -370,6 +378,24 @@ export const DocumentSigningCompleteDialog = ({
 
                 <DocumentSigningDisclosure />
 
+                {requiresContractNoticeConsent && (
+                  <div className="mt-4 flex items-start gap-2">
+                    <Checkbox
+                      id="contract-notice-consent"
+                      className="mt-0.5"
+                      checked={hasAcceptedContractNotice}
+                      onCheckedChange={(checked) => setHasAcceptedContractNotice(checked === true)}
+                    />
+                    <label htmlFor="contract-notice-consent" className="text-muted-foreground text-sm">
+                      <Trans>
+                        I have read the signature disclosure above and understand that by signing I am entering into
+                        a legally binding contract (statutory withdrawal rights may apply, e.g. for contracts formed
+                        at a distance).
+                      </Trans>
+                    </label>
+                  </div>
+                )}
+
                 <DialogFooter className="mt-4">
                   <Button
                     type="button"
@@ -380,7 +406,11 @@ export const DocumentSigningCompleteDialog = ({
                     <Trans>Cancel</Trans>
                   </Button>
 
-                  <Button type="submit" disabled={!isComplete} loading={form.formState.isSubmitting}>
+                  <Button
+                    type="submit"
+                    disabled={!isComplete || (requiresContractNoticeConsent && !hasAcceptedContractNotice)}
+                    loading={form.formState.isSubmitting}
+                  >
                     {match(recipient.role)
                       .with(RecipientRole.VIEWER, () => <Trans>Mark as Viewed</Trans>)
                       .with(RecipientRole.SIGNER, () => <Trans>Sign</Trans>)
